@@ -9,7 +9,6 @@ import Module2 from './components/Module2';
 import Module3 from './components/Module3';
 import Module4 from './components/Module4';
 import Module5 from './components/Module5';
-import Conclusion from './components/Conclusion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -51,7 +50,6 @@ function App() {
       <Module3 />
       <Module4 />
       <Module5 />
-      <Conclusion />
     </main>
   );
 }
