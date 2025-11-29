@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -6,25 +6,31 @@ gsap.registerPlugin(ScrollTrigger);
 
 const Module4 = () => {
   const container = useRef(null);
-  const titleRef = useRef(null);
-  const imageContainerRef = useRef(null);
-  const contentRefs = useRef([]);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const titleWrapper = useRef(null);
+  const imageRef = useRef(null);
+  const cardsRef = useRef([]);
 
+  // Mouse movement logic for the "RGB Split" effect
   const handleMouseMove = (e) => {
-    const { clientX, clientY } = e;
-    const { innerWidth, innerHeight } = window;
+    const { clientX, clientY, currentTarget } = e;
+    const { width, height } = currentTarget.getBoundingClientRect();
     
-    // Normalized -1 to 1
-    const x = (clientX / innerWidth - 0.5) * 2;
-    const y = (clientY / innerHeight - 0.5) * 2;
-    
-    setMousePos({ x, y });
+    // Calculate normalized position (-1 to 1)
+    const x = (clientX / width - 0.5) * 2;
+    const y = (clientY / height - 0.5) * 2;
 
-    // Chromatic Aberration Effect on Image (RGB Shift)
-    gsap.to(".rgb-layer-r", { x: x * 15, y: y * 15, duration: 0.5 });
-    gsap.to(".rgb-layer-g", { x: x * -10, y: y * -10, duration: 0.5 });
-    gsap.to(".rgb-layer-b", { x: x * 5, y: y * 5, duration: 0.5 });
+    // Move the RGB layers with different intensities to create the "Split"
+    gsap.to(".rgb-red", { x: x * 20, y: y * 20, duration: 1, ease: "power2.out" });
+    gsap.to(".rgb-green", { x: x * -15, y: y * -15, duration: 1, ease: "power2.out" });
+    gsap.to(".rgb-blue", { x: x * 10, y: y * 10, duration: 1, ease: "power2.out" });
+    
+    // Tilt the main image container slightly
+    gsap.to(imageRef.current, { 
+      rotateY: x * 5, 
+      rotateX: -y * 5, 
+      duration: 1.5, 
+      ease: "power3.out" 
+    });
   };
 
   useLayoutEffect(() => {
@@ -34,172 +40,149 @@ const Module4 = () => {
         scrollTrigger: {
           trigger: container.current,
           start: "top top",
-          end: "+=200%",
+          end: "+=250%", // Longer scroll distance for drama
           pin: true,
           scrub: 1,
         }
       });
 
-      // 1. LIQUID TITLE REVEAL
-      tl.from(".liquid-title-char", {
-        y: 200,
-        scaleY: 2, // Stretch effect
+      // --- SEQUENCE 1: THE LIQUID INTRO ---
+      tl.from(".liquid-char", {
+        y: 150,
         opacity: 0,
+        scaleY: 2.5, // Stretch vertically like taffy
+        filter: "blur(20px)",
         stagger: 0.05,
         duration: 1.5,
         ease: "power4.out"
       })
-
-      // 2. IMAGE EXPANSION
-      .from(imageContainerRef.current, {
-        scale: 0,
-        rotation: -10,
-        duration: 1.5,
-        ease: "expo.inOut"
-      }, "-=1.2")
-
-      // 3. CARDS FLOAT IN
-      .from(contentRefs.current, {
-        y: 100,
+      
+      // --- SEQUENCE 2: THE SPLIT ---
+      // Move text apart to reveal image
+      .to(".liquid-word-1", { x: "-20vw", duration: 2, ease: "power2.inOut" }, "-=1")
+      .to(".liquid-word-2", { x: "20vw", duration: 2, ease: "power2.inOut" }, "<")
+      
+      // --- SEQUENCE 3: IMAGE EMERGES ---
+      .from(imageRef.current, {
+        scale: 0.5,
         opacity: 0,
+        filter: "grayscale(100%) blur(10px)",
+        duration: 1.5,
+        ease: "power2.out"
+      }, "-=1.5")
+
+      // --- SEQUENCE 4: CARDS APPEAR ---
+      .from(".content-card", {
+        y: 50,
+        opacity: 0,
+        rotateX: 45,
         stagger: 0.2,
         duration: 1,
         ease: "back.out(1.7)"
       }, "-=0.5");
 
-      // --- SCROLL INTERACTIONS ---
-      
-      // Title melts/blurs away
-      tl.to(titleRef.current, {
-        filter: "blur(20px)",
-        opacity: 0,
-        scale: 1.1,
-        ease: "none"
-      }, 0.5);
-
-      // Image rotates and follows scroll
-      tl.to(imageContainerRef.current, {
-        rotation: 360,
-        scale: 0.5,
-        opacity: 0.2,
-        ease: "power1.inOut"
-      }, 0.5);
-
-      // Content cards spread out
-      tl.to(contentRefs.current[0], { x: -100, rotation: -5 }, 0.5);
-      tl.to(contentRefs.current[1], { x: 100, rotation: 5 }, 0.5);
-
     }, container);
     return () => ctx.revert();
   }, []);
 
-  // Helper for splitting text into spans
+  // Helper to split text for animation
   const splitText = (text) => text.split("").map((char, i) => (
-    <span key={i} className="liquid-title-char inline-block origin-bottom">
-      {char === " " ? "\u00A0" : char}
-    </span>
+    <span key={i} className="liquid-char inline-block">{char}</span>
   ));
 
   return (
     <section 
       ref={container}
       onMouseMove={handleMouseMove}
-      className="relative h-screen w-full bg-[#120214] text-rose-100 overflow-hidden flex flex-col justify-center items-center"
+      className="relative h-screen w-full bg-[#0a050a] text-white overflow-hidden flex flex-col justify-center items-center perspective-1000"
     >
-        {/* --- CUSTOM FILTERS --- */}
-        <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+        {/* --- GLOBAL SVG FILTERS (The "Sauce") --- */}
+        <svg className="absolute w-0 h-0">
             <defs>
-                <filter id="liquid">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+                <filter id="liquidFilter">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
                     <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
                     <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
                 </filter>
             </defs>
         </svg>
 
-        {/* --- BACKGROUND GRADIENTS --- */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-fuchsia-900/20 rounded-full blur-[120px] mix-blend-screen animate-pulse"></div>
-            <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-purple-900/20 rounded-full blur-[100px] mix-blend-screen" style={{ animationDuration: '8s' }}></div>
-            {/* Noise Overlay */}
-            <div className="absolute inset-0 opacity-[0.15] mix-blend-overlay">
-                <svg className='w-full h-full'><filter id='noiseM4'><feTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(#noiseM4)'/></svg>
-            </div>
+        {/* --- ATMOSPHERE --- */}
+        {/* Grain Texture */}
+        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }}></div>
+        
+        {/* Animated Orbs */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+             <div className="absolute top-[10%] left-[20%] w-[30vw] h-[30vw] bg-purple-900/30 rounded-full blur-[100px] mix-blend-screen animate-pulse duration-[5s]"></div>
+             <div className="absolute bottom-[10%] right-[20%] w-[40vw] h-[40vw] bg-pink-900/20 rounded-full blur-[120px] mix-blend-screen"></div>
         </div>
 
-        {/* --- MAIN TITLE (Liquid Effect) --- */}
-        <div ref={titleRef} className="absolute top-16 w-full text-center z-20 pointer-events-none mix-blend-lighten">
-            <h1 className="font-display text-[10vw] font-black leading-none tracking-tighter text-transparent stroke-white" 
-                style={{ filter: "url(#liquid)", WebkitTextStroke: "2px #f0abfc" }}>
-                {splitText("FLUIDITY")}
+        {/* --- TYPOGRAPHY LAYER --- */}
+        <div ref={titleWrapper} className="absolute z-20 flex flex-col items-center justify-center w-full mix-blend-screen pointer-events-none">
+            {/* The filter creates the "Liquid" effect on the text */}
+            <h1 className="liquid-word-1 font-display text-[12vw] font-black leading-none tracking-tighter text-white/90" style={{ filter: "url(#liquidFilter)" }}>
+                {splitText("FLUID")}
             </h1>
-            <h2 className="font-display text-[4vw] font-bold tracking-[0.5em] text-fuchsia-500/80 mt-[-2vw] mix-blend-screen">
-                TRANSITION
-            </h2>
+            <h1 className="liquid-word-2 font-display text-[12vw] font-black leading-none tracking-tighter text-white/90 mt-[-4vw]" style={{ filter: "url(#liquidFilter)" }}>
+                {splitText("FORM")}
+            </h1>
         </div>
 
-        {/* --- CENTRAL IMAGE (RGB Shift) --- */}
-        <div className="relative z-10 w-[400px] h-[500px] perspective-1000">
-            <div 
-                ref={imageContainerRef}
-                className="relative w-full h-full"
-                style={{ transformStyle: "preserve-3d" }}
-            >
-                {/* RGB Layer Red */}
-                <div className="rgb-layer-r absolute inset-0 bg-red-500/50 mix-blend-screen opacity-70" style={{ clipPath: "inset(0)" }}>
-                     <img src="placeholder-module4.jpg" className="w-full h-full object-cover grayscale opacity-50" alt="red" />
-                </div>
-                {/* RGB Layer Green */}
-                <div className="rgb-layer-g absolute inset-0 bg-green-500/50 mix-blend-screen opacity-70" style={{ clipPath: "inset(0)" }}>
-                     <img src="placeholder-module4.jpg" className="w-full h-full object-cover grayscale opacity-50" alt="green" />
-                </div>
-                {/* RGB Layer Blue */}
-                <div className="rgb-layer-b absolute inset-0 bg-blue-500/50 mix-blend-screen opacity-70" style={{ clipPath: "inset(0)" }}>
-                     <img src="placeholder-module4.jpg" className="w-full h-full object-cover grayscale opacity-50" alt="blue" />
-                </div>
-                
-                {/* Main Clear Image */}
-                <div className="absolute inset-0 border border-white/20 overflow-hidden bg-black">
-                     <img src="placeholder-module4.jpg" alt="Body Gender" className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
-                     {/* Scanlines */}
-                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-                </div>
+        {/* --- INTERACTIVE IMAGE LAYER (The "Eye") --- */}
+        <div ref={imageRef} className="relative z-10 w-[350px] md:w-[450px] aspect-[3/4] preserve-3d">
+            
+            {/* RGB Layers (These move separately on mouse hover) */}
+            <div className="rgb-red absolute inset-0 bg-red-600 mix-blend-screen opacity-60 overflow-hidden rounded-sm">
+                <img src="placeholder-module4.jpg" className="w-full h-full object-cover grayscale contrast-150" alt="" />
+            </div>
+            <div className="rgb-green absolute inset-0 bg-green-600 mix-blend-screen opacity-60 overflow-hidden rounded-sm">
+                <img src="placeholder-module4.jpg" className="w-full h-full object-cover grayscale contrast-150" alt="" />
+            </div>
+            <div className="rgb-blue absolute inset-0 bg-blue-600 mix-blend-screen opacity-60 overflow-hidden rounded-sm">
+                <img src="placeholder-module4.jpg" className="w-full h-full object-cover grayscale contrast-150" alt="" />
+            </div>
+
+            {/* Main Image Base */}
+            <div className="absolute inset-0 border-[1px] border-white/20 bg-black overflow-hidden rounded-sm">
+                <img src="placeholder-module4.jpg" alt="Module 4 Main" className="w-full h-full object-cover opacity-80" />
+                {/* Scanline Overlay */}
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-20 bg-[length:100%_4px,3px_100%] pointer-events-none"></div>
             </div>
         </div>
 
-        {/* --- FLOATING CONTENT CARDS (Glassmorphism) --- */}
-        <div className="absolute w-full h-full pointer-events-none flex items-center justify-center z-30">
+        {/* --- FLOATING EDITORIAL CARDS --- */}
+        <div className="absolute inset-0 z-30 pointer-events-none">
             
-            {/* Card 1: Left */}
-            <div ref={el => contentRefs.current[0] = el} className="absolute left-[10%] top-[40%] w-80 bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-lg pointer-events-auto hover:bg-white/10 transition-colors">
-                <div className="w-8 h-1 bg-fuchsia-500 mb-4 shadow-[0_0_10px_#d946ef]"></div>
-                <h3 className="font-mono text-sm text-fuchsia-300 uppercase tracking-widest mb-2">Refraction</h3>
-                <p className="text-sm font-light leading-relaxed text-gray-200">
+            {/* Top Right Data Block */}
+            <div className="absolute top-12 right-6 md:right-12 text-right">
+                <div className="font-mono text-xs text-gray-500 mb-1">MODULE 04</div>
+                <div className="text-2xl font-display uppercase tracking-widest text-white">Identity Spectrum</div>
+                <div className="w-full h-[1px] bg-white/20 mt-2"></div>
+            </div>
+
+            {/* Content Card 1 (Bottom Left) */}
+            <div className="content-card absolute bottom-20 left-6 md:left-20 w-72 md:w-80 backdrop-blur-md bg-black/40 border border-white/10 p-6">
+                <div className="text-pink-500 font-mono text-xs mb-3 tracking-widest">REF. 01 — PERCEPTION</div>
+                <p className="font-body text-sm leading-relaxed text-gray-300">
                     "Insecurities aren't just personal—they're shaped by media standards that unconsciously influence how I evaluate my own body."
                 </p>
             </div>
 
-            {/* Card 2: Right */}
-            <div ref={el => contentRefs.current[1] = el} className="absolute right-[10%] bottom-[20%] w-80 bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-lg pointer-events-auto hover:bg-white/10 transition-colors">
-                 <div className="w-8 h-1 bg-purple-500 mb-4 shadow-[0_0_10px_#a855f7]"></div>
-                <h3 className="font-mono text-sm text-purple-300 uppercase tracking-widest mb-2">Spectrum</h3>
-                <p className="text-sm font-light leading-relaxed text-gray-200">
-                    "Discussions on sexuality challenged me to look beyond stereotypes. Every transition is a cultural process of redefining the self."
+            {/* Content Card 2 (Right Center) */}
+            <div className="content-card absolute top-1/2 right-6 md:right-20 w-72 md:w-80 backdrop-blur-md bg-black/40 border border-white/10 p-6 transform -translate-y-1/2">
+                <div className="text-purple-500 font-mono text-xs mb-3 tracking-widest">REF. 02 — SPECTRUM</div>
+                <p className="font-body text-sm leading-relaxed text-gray-300">
+                    "Every transition is a cultural process. I learned to look beyond stereotypes and see identity as a constant state of becoming."
                 </p>
             </div>
 
         </div>
 
-        {/* --- DECORATIVE ELEMENTS --- */}
-        <div className="absolute bottom-12 w-full flex justify-between px-12 z-40 mix-blend-overlay">
-             <div className="font-mono text-[10px] tracking-widest uppercase">
-                Fig. 04 — Body/Gender
-             </div>
-             <div className="font-mono text-[10px] tracking-widest uppercase">
-                [ Coordinates: Fluid ]
-             </div>
+        {/* --- DECORATIVE MARKERS --- */}
+        <div className="absolute bottom-6 w-full flex justify-between px-6 opacity-30 font-mono text-[10px] tracking-[0.3em]">
+            <span>SCROLL TO PROCESS</span>
+            <span>FIG. 4.0</span>
         </div>
-
     </section>
   );
 };

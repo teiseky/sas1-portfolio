@@ -122,9 +122,9 @@ const Hero = () => {
             {/* The Image Container with Reveal Effect */}
             <div ref={imageContainerRef} className="w-full h-full relative overflow-hidden bg-neutral-900 shadow-2xl shadow-black/80">
                 {/* >>> REPLACE THE SRC BELOW WITH YOUR PHOTO <<< */}
-                <img 
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop" 
-                    alt="Portrait" 
+                <img
+                    src="/placeholder-hero-bg.png"
+                    alt="Portrait"
                     className="w-full h-full object-cover opacity-90"
                 />
                 
