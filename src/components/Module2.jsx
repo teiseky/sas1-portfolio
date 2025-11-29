@@ -9,7 +9,6 @@ const Module2 = () => {
   const marqueeRef = useRef(null);
   const contentWrapperRef = useRef(null);
   const imageWrapperRef = useRef(null);
-  const titleRef = useRef(null);
   
   // Mouse tilt effect state
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
@@ -35,7 +34,6 @@ const Module2 = () => {
     let ctx = gsap.context(() => {
       
       // 1. MARQUEE ANIMATION (Infinite Scroll Background)
-      // We clone the text to make it seamless
       gsap.to(marqueeRef.current, {
         xPercent: -50,
         ease: "none",
@@ -43,23 +41,9 @@ const Module2 = () => {
         repeat: -1
       });
 
-      // 2. SCROLL TRIGGERED REVEALS
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: container.current,
-          start: "top center",
-          end: "bottom bottom",
-          scrub: 1
-        }
-      });
-
-      // Title moves visibly slower than scroll (Parallax)
-      tl.to(titleRef.current, {
-        y: 100,
-        ease: "none"
-      }, 0);
-
-      // 3. TEXT REVEAL ON ENTER
+      // 2. TEXT REVEAL ON ENTER
+      // We animate the items into place, but we DON'T move them on scroll 
+      // to prevent them from crashing into each other.
       gsap.from(".editorial-text", {
         y: 50,
         opacity: 0,
@@ -87,7 +71,8 @@ const Module2 = () => {
       </div>
 
       {/* --- KINETIC TYPOGRAPHY BACKGROUND (The Marquee) --- */}
-      <div className="absolute top-1/2 -translate-y-1/2 left-0 w-[200%] z-0 opacity-10 select-none pointer-events-none mix-blend-color-dodge">
+      {/* Lowered opacity to 0.05 to prevent visual clash with main text */}
+      <div className="absolute top-1/2 -translate-y-1/2 left-0 w-[200%] z-0 opacity-[0.05] select-none pointer-events-none mix-blend-lighten">
         <div ref={marqueeRef} className="whitespace-nowrap font-black text-[15vw] leading-none text-transparent stroke-white" style={{ WebkitTextStroke: '1px #555' }}>
           CONSTRUCTING THE SELF — IDENTITY IN FLUX — BIOLOGY VS SOCIETY — CONSTRUCTING THE SELF — IDENTITY IN FLUX —
         </div>
@@ -100,15 +85,15 @@ const Module2 = () => {
         <div className="lg:col-span-7 flex flex-col justify-center relative">
           
           {/* Chapter Marker */}
-          <div className="editorial-text flex items-center gap-4 mb-6 text-amber-600/80">
+          <div className="editorial-text flex items-center gap-4 mb-8 text-amber-600/80">
             <span className="text-xs font-mono border border-amber-600/50 px-2 py-1 rounded">FIG. 02</span>
             <div className="h-px w-12 bg-amber-600/50"></div>
             <span className="text-xs font-mono uppercase tracking-widest">Selfhood in Society</span>
           </div>
 
-          {/* Main Title - Huge & Tight */}
-          <div ref={titleRef} className="relative z-20 mix-blend-normal">
-            <h2 className="editorial-text text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8">
+          {/* Main Title - Relaxed leading to prevent line overlap */}
+          <div className="relative z-20 mix-blend-normal mb-12">
+            <h2 className="editorial-text text-6xl md:text-8xl font-black tracking-tighter leading-[0.95]">
               IDENTITY <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-500 to-white">IS NOT</span> <br />
               FIXED.
@@ -116,7 +101,7 @@ const Module2 = () => {
           </div>
 
           {/* Editorial Paragraphs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm md:text-base text-gray-400 font-light leading-relaxed max-w-2xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm md:text-base text-gray-400 font-light leading-relaxed max-w-3xl">
             <p className="editorial-text border-l border-white/10 pl-6">
               Module 2 dismantled the idea of a pre-determined self. Learning about <strong className="text-white font-normal">Biological Determinism</strong> and Eugenics highlighted the danger of reducing complexity to genetics.
             </p>
@@ -141,7 +126,7 @@ const Module2 = () => {
         </div>
 
         {/* RIGHT COLUMN: The Interactive Image */}
-        <div className="lg:col-span-5 h-full flex items-center justify-center lg:justify-end perspective-1000">
+        <div className="lg:col-span-5 h-full flex items-center justify-center lg:justify-end perspective-1000 mt-12 lg:mt-0">
            
            <div 
              ref={imageWrapperRef}
@@ -150,14 +135,14 @@ const Module2 = () => {
              className="relative w-full max-w-md aspect-[3/4] group cursor-pointer"
              style={{ perspective: "1000px" }}
            >
-              {/* The "Card" Container - Rotates in 3D */}
-              <div 
-                className="w-full h-full relative transition-transform duration-100 ease-out will-change-transform"
-                style={{ 
-                  transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
-                  transformStyle: "preserve-3d" 
-                }}
-              >
+             {/* The "Card" Container - Rotates in 3D */}
+             <div 
+               className="w-full h-full relative transition-transform duration-100 ease-out will-change-transform"
+               style={{ 
+                 transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
+                 transformStyle: "preserve-3d" 
+               }}
+             >
                  {/* Decorative Frame Elements (Floating off the card) */}
                  <div className="absolute -inset-4 border border-white/20 z-0 translate-z-[-20px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                  <div className="absolute -top-10 -right-10 text-xs font-mono text-white/30 writing-vertical-lr">REF: MODULE_02_DATA</div>
@@ -175,12 +160,12 @@ const Module2 = () => {
 
                  {/* Floating Text ON TOP of Image (3D Depth) */}
                  <div 
-                    className="absolute bottom-8 left-8 z-30 transform translate-z-[50px] mix-blend-difference"
-                    style={{ transform: "translateZ(50px)" }}
+                   className="absolute bottom-8 left-8 z-30 transform translate-z-[50px] mix-blend-difference"
+                   style={{ transform: "translateZ(50px)" }}
                  >
                     <h3 className="text-4xl font-black text-white leading-none">THE<br/>AGENCY</h3>
                  </div>
-              </div>
+             </div>
            </div>
 
         </div>

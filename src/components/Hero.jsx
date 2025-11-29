@@ -156,7 +156,7 @@ const Hero = () => {
                 <div className="font-mono text-xs text-neutral-400 space-y-1">
                     <p>LAT: 14.5995° N</p>
                     <p>LNG: 120.9842° E</p>
-                    <p className="mt-4 text-white">EST. 2024</p>
+                    <p className="mt-4 text-white">EST. 2025</p>
                 </div>
             </div>
 

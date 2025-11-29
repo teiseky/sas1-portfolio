@@ -9,6 +9,7 @@ import Module2 from './components/Module2';
 import Module3 from './components/Module3';
 import Module4 from './components/Module4';
 import Module5 from './components/Module5';
+import MobileWarning from './components/MobileWarning';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -43,6 +44,9 @@ function App() {
     <main className="w-full relative overflow-hidden bg-black text-white selection:bg-white selection:text-black">
       {/* Global Grain Overlay */}
       <div className="fixed inset-0 pointer-events-none z-50 bg-grain mix-blend-overlay opacity-50"></div>
+
+      {/* Mobile Warning Overlay */}
+      <MobileWarning />
 
       <Hero />
       <Module1 />
